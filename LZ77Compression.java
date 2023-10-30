@@ -55,7 +55,8 @@ public class LZ77Compression {
                 }
             }
             if (bestMatchLength > 0) {
-                Tag tag = new Tag(bestMatchPosition, bestMatchLength, text.charAt(i + bestMatchLength));
+                char nextChar = (i + bestMatchLength < text.length()) ? text.charAt(i + bestMatchLength) : '0';
+                Tag tag = new Tag(bestMatchPosition, bestMatchLength, nextChar);
                 printTag(tag, outputStream);
                 i += bestMatchLength;
                 windowStart = i - windowSize + 1;
@@ -68,6 +69,7 @@ public class LZ77Compression {
     }
 
     public static void decompressLZ77ToFile(List<Tag> tags, String outputFileName) throws IOException {
+        FileOutputStream outputStream = new FileOutputStream(outputFileName);
         String output = "";
 
         for (Tag tag : tags) {
@@ -80,7 +82,8 @@ public class LZ77Compression {
             }
         }
 
-        System.out.println(output);
+        System.out.println(output.toString());
+        outputStream.write(output.getBytes());
     }
 
     public static void printMainMenu() {
