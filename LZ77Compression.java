@@ -31,12 +31,32 @@ public class LZ77Compression {
     }
 
     public static void printTag(Tag tag, FileOutputStream outputStream) throws IOException {
-        String output = "<" + tag.position + ", " + tag.length + ", " + tag.nextSymbol + ">\n";
+        String output = null;
+        if (tag.nextSymbol == '\0')
+            output = "<" + tag.position + ", " + tag.length + ", NULL>\n";
+        else
+            output = "<" + tag.position + ", " + tag.length + ", " + tag.nextSymbol + ">\n";
         System.out.print(output);
+
         outputStream.write(output.getBytes());
     }
 
-    public static void compressLZ77ToFile(String text, int windowSize, String outputFileName) throws IOException {
+    private static String readFromInputFile(String inputFileName) throws IOException {
+        String output = "";
+        try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                output += line;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return output;
+    }
+
+    public static void compressLZ77ToFile(String inputFileName, int windowSize, String outputFileName)
+            throws IOException {
+        String text = readFromInputFile(inputFileName);
         FileOutputStream outputStream = new FileOutputStream(outputFileName);
         int windowStart = 0;
 
@@ -47,7 +67,7 @@ public class LZ77Compression {
 
             for (int j = i - 1; j >= windowStart && j >= 0; j--) {
                 int k = 0;
-                while (i + k < windowEnd && text.charAt(j + k) == text.charAt(i + k))
+                while (j + k < i && text.charAt(j + k) == text.charAt(i + k))
                     k++;
                 if (k > bestMatchLength) {
                     bestMatchLength = k;
@@ -55,7 +75,7 @@ public class LZ77Compression {
                 }
             }
             if (bestMatchLength > 0) {
-                char nextChar = (i + bestMatchLength < text.length()) ? text.charAt(i + bestMatchLength) : '0';
+                char nextChar = (i + bestMatchLength < text.length()) ? text.charAt(i + bestMatchLength) : '\0';
                 Tag tag = new Tag(bestMatchPosition, bestMatchLength, nextChar);
                 printTag(tag, outputStream);
                 i += bestMatchLength;
@@ -77,7 +97,7 @@ public class LZ77Compression {
                 output += tag.nextSymbol;
             else {
                 int position = output.length() - tag.position;
-                output += output.substring(position, position + tag.length)
+                output += output.substring(position, Math.min(position + tag.length, output.length()))
                         + ((tag.nextSymbol != 0) ? tag.nextSymbol : "");
             }
         }
@@ -96,22 +116,13 @@ public class LZ77Compression {
 
     public static void compressionOption() {
         int windowSize;
-        while (true) {
-            try {
-                System.out.print("Enter the window size: ");
-                windowSize = Integer.parseInt(System.console().readLine());
-                break;
-            } catch (NumberFormatException e) {
-                System.out.println("Enter a number from 0 and above.");
-            }
-        }
-        System.out.print("Enter the text to compress: ");
-        String text = System.console().readLine();
+        System.out.print("Enter the input file name: ");
+        String inputFileName = System.console().readLine();
 
         System.out.print("Enter the output file name: ");
         String outputFileName = System.console().readLine();
         try {
-            compressLZ77ToFile(text, windowSize, outputFileName);
+            compressLZ77ToFile(inputFileName, 12, outputFileName);
             System.out.println("Compression complete. Compressed data saved to " + outputFileName);
         } catch (IOException e) {
             System.err.println("Error while writing to the file: " + e.getMessage());
@@ -129,7 +140,7 @@ public class LZ77Compression {
                 if (parts.length == 4) {
                     int position = Integer.parseInt(parts[1].trim());
                     int length = Integer.parseInt(parts[2].trim());
-                    char nextSymbol = parts[3].trim().charAt(0);
+                    char nextSymbol = (parts[3].trim().equals("NULL")) ? 0 : parts[3].trim().charAt(0);
 
                     Tag tag = new Tag(position, length, nextSymbol);
                     tags.add(tag);
