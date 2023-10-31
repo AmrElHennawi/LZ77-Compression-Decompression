@@ -63,7 +63,6 @@ public class LZ77Compression {
         for (int i = 0; i < text.length(); i++) {
             int bestMatchPosition = -1;
             int bestMatchLength = -1;
-            int windowEnd = Math.min(i + windowSize, text.length());
 
             for (int j = i - 1; j >= windowStart && j >= 0; j--) {
                 int k = 0;
@@ -104,6 +103,7 @@ public class LZ77Compression {
 
         System.out.println(output.toString());
         outputStream.write(output.getBytes());
+        outputStream.close();
     }
 
     public static void printMainMenu() {
@@ -115,7 +115,6 @@ public class LZ77Compression {
     }
 
     public static void compressionOption() {
-        int windowSize;
         System.out.print("Enter the input file name: ");
         String inputFileName = System.console().readLine();
 
