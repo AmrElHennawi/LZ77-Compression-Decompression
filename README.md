@@ -7,6 +7,7 @@ This repository contains a Java implementation of the LZ77 compression algorithm
 
 **Program Structure:**
 Our project is organized into a single Java class, `LZ77Compression`. This class contains methods to compress and decompress data using the LZ77 algorithm.
+`Tag` This class is a data structure to store and manipulate LZ77 compression information.
 
 **Features:**
 - Compresses text data using the LZ77 algorithm.
